@@ -1,0 +1,22 @@
+{
+  "name": "automatic-scraping",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js && nodemon private-property.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.27.2",
+    "cheerio": "^1.0.0-rc.12",
+    "node": "^16.17.0",
+    "nodemon": "^2.0.19",
+    "pretty": "^2.0.0",
+    "puppeteer": "^17.0.0",
+    "request": "^2.88.2"
+  }
+}
