@@ -1,7 +1,6 @@
 const request = require('request');
 const cheerio = require('cheerio');
 const fs = require('fs');
-const { start } = require('repl');
 const writeStream = fs.createWriteStream('properties by preferental.json')
 
 //Detemines how many times . appears in a string 
