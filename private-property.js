@@ -1,7 +1,7 @@
 const request = require('request');
 const cheerio = require('cheerio');
 const fs = require('fs');
-const writeStream = fs.createWriteStream('properties by preferental.json')
+const writeStream = fs.createWriteStream('property - middelburg.json')
 
 //Detemines how many times . appears in a string 
 function count(str, find) {
@@ -9,7 +9,6 @@ function count(str, find) {
 }
 // Headers
 // writeStream.write('[ \n');
-// let link = 'https://www.privateproperty.co.za/estate-agency/preferental/rental-listings/10490'
 let link = 'https://www.privateproperty.co.za/estate-agency/preferental/rental-listings/10490'
  for (let x = 0; x < 999; x++) {
     request(`${link}?page=${x}`, (err, response, html) => {
