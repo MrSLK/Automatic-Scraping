@@ -1,84 +1,81 @@
-const request = require('request');
-const cheerio = require('cheerio');
-const fs = require('fs');
-const writeStream = fs.createWriteStream('properties by preferental.json')
+const puppeteer = require("puppeteer")
+const fs = require("fs/promises")
 
-//Detemines how many times . appears in a string 
-function count(str, find) {
-  return (str.split(find)).length - 1;
-}
-// Headers
-// writeStream.write('[ \n');
-// let link = 'https://www.privateproperty.co.za/estate-agency/preferental/rental-listings/10490'
 let link = 'https://www.gumtree.co.za/u-seller-listings/preferental-platform/v1u114570700p'
-let individual_links = []
-let property_link;
-let default_link = 'https://www.gumtree.co.za'
-// let prefId;
-//  for (let x = 0; x < 999; x++) {
+let toPass;
+let price = [];
+async function start() {
+  let limiter = await getRep()
 
-//  }
+  const browser = await puppeteer.launch()
+  const page = await browser.newPage()
 
-function scrape() {
+  for (let i = 1; i <= limiter; i++) {
 
-  for (let i = 1; i < 20; i++) {
-    request(`${link}${i}`, (err, response, html) => {
-      
-      if (!err) {
-        const $ = cheerio.load(html)
-  
-        //Get other files
-        $('.related-ad-title').each((index, elem) => {
-          var url = $(elem).attr('href')
-          individual_links.push(url)
-  
-  
-          // console.log("individual_links:", individual_links);
-          property_link = default_link + individual_links[i]
-          request(property_link, (err, response, html) => {
-            if (!err) {
-              const p = cheerio.load(html)
-  
-              //Get other files
-              p('.description-content').each((index, el) => {
-                var prefId = p(el).children('span').children('.phoneclick-increment ').children('a').children('href')
-                // console.log("Im calling u");
-                console.log("PrefID: ", prefId);
-              });
+    toPass = link + i
+    console.log("toPass: ", toPass);
+    await page.goto(toPass)
 
-            }
-          });
-        });
-        // $('.pagination').each((index, elem) => {
-        //     const pages = $(elem).find('.pageNumber').text()
-        //     max = pages.substring(pages.indexOf('7') + 1, pages.indexOf('Next'))
-        //     mogs = parseInt(max)
-        //     console.log("from pagination: ", mogs)
-  
-        // });
-      }
-    });
+    let temp = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll(".related-ad-title")).map(x => x.getAttribute('href'))
+    })
+    price.push(temp)
+    
+    console.log("price", price);
+    console.log("Array of hrefs", temp.length);
+
+    for (let x = 0; x < temp.length; x++) {
+      console.log("href",temp[x]);
+      await scrape(temp[x])
+    }
+
   }
+  await browser.close()
 }
 
-scrape();
+async function scrape(latestLink) {
+  let defaultLink = 'https://www.gumtree.co.za'
+  let newLink = defaultLink + latestLink
+  console.log("New link", newLink);
 
-// // in a new folder be sure to run "npm init -y" and "npm install puppeteer"
-// const puppeteer = require("puppeteer")
-// const fs = require("fs/promises")
+  const browser = await puppeteer.launch()
+  const page = await browser.newPage()
+  await page.goto(newLink)
 
-// async function start() {
-//   const browser = await puppeteer.launch()
-//   const page = await browser.newPage()
-//   await page.goto("https://www.gumtree.co.za/u-seller-listings/preferental-platform/v1u114570700p1")
+  let desc = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll(".phoneclick-increment")).map(x => x.getAttribute('href'))
+  })
 
-// let price = await page.evaluate(() => {
-//     return Array.from(document.getElementsByClassName('.title title-mult-lines')).map(x => x.textContent)
-//   })
+  desc = desc.toLocaleString()
 
-//   console.log("price", price);
+  var numb = desc.match(/\d/g);
+  console.log("numb", numb);
+  numb = numb.join("");
 
-//   await browser.close()
-// }
+  let prefNumber = `Pref${numb}`;
 
-// start()
+  console.log("prefNumber", prefNumber);
+
+  await browser.close()
+}
+
+
+async function getRep() {
+
+  const browser = await puppeteer.launch()
+  const page = await browser.newPage()
+  await page.goto('https://www.gumtree.co.za/u-seller-listings/preferental-platform/v1u114570700p1')
+
+  let pagination = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll(".page-box")).map(x => x.textContent)
+  })
+
+  pagination = pagination.toLocaleString()
+  let pricePagination = pagination.split(',').pop();
+
+  await browser.close()
+
+  return pricePagination
+}
+
+start()
