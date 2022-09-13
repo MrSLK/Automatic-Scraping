@@ -4,6 +4,7 @@ const fs = require("fs/promises")
 let link = 'https://www.gumtree.co.za/u-seller-listings/preferental-platform/v1u114570700p'
 let toPass;
 let price = [];
+let prefs = [];
 async function start() {
   let limiter = await getRep()
 
@@ -14,7 +15,12 @@ async function start() {
 
     toPass = link + i
     console.log("toPass: ", toPass);
-    await page.goto(toPass)
+    await page.goto(toPass, {
+      waitUntil: 'load',
+      // Remove the timeout
+      timeout: 0
+  });
+
 
     let temp = await page.evaluate(() => {
       return Array.from(document.querySelectorAll(".related-ad-title")).map(x => x.getAttribute('href'))
@@ -40,7 +46,11 @@ async function scrape(latestLink) {
 
   const browser = await puppeteer.launch()
   const page = await browser.newPage()
-  await page.goto(newLink)
+  await page.goto(newLink, {
+    waitUntil: 'load',
+    // Remove the timeout
+    timeout: 0
+})
 
   let desc = await page.evaluate(() => {
     return Array.from(document.querySelectorAll(".phoneclick-increment")).map(x => x.getAttribute('href'))
@@ -50,11 +60,14 @@ async function scrape(latestLink) {
 
   var numb = desc.match(/\d/g);
   console.log("numb", numb);
-  numb = numb.join("");
+ if (numb != null){ 
+  numb = await numb.join("");
+}
 
   let prefNumber = `Pref${numb}`;
 
   console.log("prefNumber", prefNumber);
+  prefs.push(prefNumber);
 
   await browser.close()
 }
@@ -64,7 +77,11 @@ async function getRep() {
 
   const browser = await puppeteer.launch()
   const page = await browser.newPage()
-  await page.goto('https://www.gumtree.co.za/u-seller-listings/preferental-platform/v1u114570700p1')
+  await page.goto('https://www.gumtree.co.za/u-seller-listings/preferental-platform/v1u114570700p1', {
+    waitUntil: 'load',
+    // Remove the timeout
+    timeout: 0
+})
 
   let pagination = await page.evaluate(() => {
     return Array.from(document.querySelectorAll(".page-box")).map(x => x.textContent)

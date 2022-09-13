@@ -5,16 +5,8 @@ const fs = require("fs/promises")
 async function start() {
   const browser = await puppeteer.launch()
   const page = await browser.newPage()
-  await page.goto("https://www.property24.com/to-rent/agency/preferental-platform/preferental-platform/233159")
-//   await page.goto("https://learnwebcode.github.io/practice-requests/")
-
-//   const names = await page.evaluate(() => {
-//     return Array.from(document.querySelectorAll(".info strong")).map(x => x.textContent)
-//   })
-
-// const price = await page.evaluate(() => {
-//     return Array.from(document.querySelectorAll(".p24_price")).map(x => x.textContent)
-//   }) 
+  await page.goto("https://www.property24.com/to-rent/agency/preferental-platform/preferental-platform/233159/p1")
+ 
 let price = await page.evaluate(() => {
     return Array.from(document.querySelectorAll(".p24_price")).map(x => x.textContent)
   })
@@ -27,6 +19,7 @@ const title = await page.evaluate(() => {
   const address = await page.evaluate(() => {
     return Array.from(document.querySelectorAll(".p24_address")).map(x => x.textContent)
   })
+  console.log();
   const description = await page.evaluate(() => {
     return Array.from(document.querySelectorAll(".p24_excerpt")).map(x => x.textContent)
   })
@@ -48,7 +41,10 @@ const title = await page.evaluate(() => {
   let tempBath = []
   let newSize = []
   let tempSize = []
+  let fullAddress = [];
+  let tempAdd;
 
+  console.log("price", price[3]);
   for (let i = 3; i < price.length; i++) {
 
     newMe[i - 3] = price[i].toString()
@@ -74,7 +70,6 @@ const title = await page.evaluate(() => {
       
   }
 
-
   for(let x = 0; x < size.length; x++) {
     size[x] = size[x].toString();
     
@@ -82,16 +77,35 @@ const title = await page.evaluate(() => {
     tempSize[x] = newSize[x].toString().substring(2);
   }
 
-  console.log("Execution time", runDate);
-  console.log("price", newMe);
-  console.log("title", title);
-  console.log("location", location);
-  console.log("address", address);
-  // console.log("description", descriptlsion);
-  console.log("Bedroom", newBed);
-  console.log("Bathroom", tempBath);
-  console.log("size:",tempSize);
+  for (let a = 0; a <address.length; a++) {
+    tempAdd = address[a] + ', ' +  location[a]
+    fullAddress.push(tempAdd);
+  }
 
+  let data = {
+    price: '',
+    title: '',
+    address: '',
+    bedroom: '',
+    bathroom: '',
+    size: ''
+  }
+  let properties = []
+
+  for (let b = 0; b < 30; b++) {
+    data = {
+      price: newMe[b],
+      title: title[b],
+      address: fullAddress[b],
+      bedroom: newBed[b],
+      bathroom: tempBath[b],
+      size: tempSize[b]
+    }
+
+    properties.push(data);
+  }
+  
+  console.log("Property", properties)
 
 //   await fs.writeFile("names.txt", names.join("\r\n"))
 
@@ -107,7 +121,6 @@ const title = await page.evaluate(() => {
 //   await Promise.all([page.click("#ourform button"), page.waitForNavigation()])
 //   const info = await page.$eval("#message", el => el.textContent)
 
-//   console.log(info)
 
 //   for (const photo of photos) {
 //     const imagepage = await page.goto(photo)
