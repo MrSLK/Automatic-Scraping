@@ -1,11 +1,16 @@
+const db = require("../Models");
 const puppeteer = require("puppeteer")
 const fs = require("fs/promises")
+
+const Gumtree = db.gumtree;
 
 let link = 'https://www.gumtree.co.za/u-seller-listings/preferental-platform/v1u114570700p'
 let toPass;
 let price = [];
 let prefs = [];
-async function start() {
+
+exports.startGumtreeScraping = async (req, res) => {
+
   let limiter = await getRep()
 
   const browser = await puppeteer.launch()
@@ -67,6 +72,21 @@ async function scrape(latestLink) {
   let prefNumber = `Pref${numb}`;
 
   console.log("prefNumber", prefNumber);
+
+  const gumtree = new Gumtree ({
+    prefNumber: prefNumber
+  });
+
+  await gumtree.save(gumtree).then((response) => {
+    if (response) {
+      res.status(201).send("Gumtree loaded to db!");
+    } else {
+      res.status(201).send("Gumtree not loaded to db!");
+    }
+  }).catch((err) => {          
+    console.log(err);
+  });
+
   prefs.push(prefNumber);
 
   await browser.close()
@@ -94,5 +114,3 @@ async function getRep() {
 
   return pricePagination
 }
-
-start()

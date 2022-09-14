@@ -1,8 +1,10 @@
 // in a new folder be sure to run "npm init -y" and "npm install puppeteer"
 const puppeteer = require("puppeteer")
-const fs = require("fs/promises")
+const db = require("../Models");
+const Property24 = db.property24;
 
-async function start() {
+exports.startProperty24Scraping = async (req, res) => {
+  
   const browser = await puppeteer.launch()
   const page = await browser.newPage()
   await page.goto("https://www.property24.com/to-rent/agency/preferental-platform/preferental-platform/233159/p1")
@@ -101,33 +103,21 @@ const title = await page.evaluate(() => {
       bathroom: tempBath[b],
       size: tempSize[b]
     }
+  
+    await Property24.save(data).then((response) => {
+      if (response) {
+        res.status(201).send("Property24 loaded to db!");
+      } else {
+        res.status(201).send("Property24 not loaded to db!");
+      }
+    }).catch((err) => {          
+      console.log(err);
+    });
 
     properties.push(data);
   }
   
   console.log("Property", properties)
 
-//   await fs.writeFile("names.txt", names.join("\r\n"))
-
-//   await page.click("#clickme")
-//   const clickedData = await page.$eval("#data", el => el.textContent)
-//   console.log(clickedData)
-
-//   const photos = await page.$$eval("img", imgs => {
-//     return imgs.map(x => x.src)
-//   })
-
-//   await page.type("#ourfield", "blue")
-//   await Promise.all([page.click("#ourform button"), page.waitForNavigation()])
-//   const info = await page.$eval("#message", el => el.textContent)
-
-
-//   for (const photo of photos) {
-//     const imagepage = await page.goto(photo)
-//     await fs.writeFile(photo.split("/").pop(), await imagepage.buffer())
-//   }
-
   await browser.close()
 }
-
-start()

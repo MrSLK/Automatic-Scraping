@@ -1,7 +1,7 @@
 const puppeteer = require("puppeteer")
 const fs = require("fs/promises")
 
-async function start() {
+exports.startMyPropertyScraping = async (req, res) => {
   const browser = await puppeteer.launch()
   const page = await browser.newPage()  
   // await page.goto("https://www.myproperty.co.za/agents/preferental-platform-510359")
@@ -19,5 +19,3 @@ async function start() {
 
   await browser.close()
 }
-
-start()
