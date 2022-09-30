@@ -1,7 +1,13 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const cors = require("cors");
 
 const app = express();
+
+var corsOptions = {
+  origin: "*"
+};
+app.use(cors(corsOptions));
 
 app.use(express.json());
 

@@ -14,7 +14,7 @@ function count(str, find) {
 // writeStream.write('[ \n');
 let link = 'https://www.privateproperty.co.za/estate-agency/preferental/rental-listings/10490'
 
-exports.startPrivatePropertyScraping =  (req, res) => {
+exports.startPrivatePropertyScraping =   (req, res) => {
     for (let x = 0; x < 999; x++) {
         request(`${link}?page=${x}`, (err, response, html) => {
         // shiba = shiba + 1;
@@ -23,7 +23,7 @@ exports.startPrivatePropertyScraping =  (req, res) => {
             const $ = cheerio.load(html)
     
             //Get other files
-            $('.listingResult').each((index, elem) => {
+            $('.listingResult').each( async (index, elem) => {
                 // console.log(index);
                 var url = $(elem).attr('href')
                 url = url.substring(9)
@@ -133,42 +133,12 @@ exports.startPrivatePropertyScraping =  (req, res) => {
                     reference: reference
                   });
                 
-                 privateProperty.save(privateProperty).then((response) => {
-                    if (response) {
-                      res.status(201).send("Private Property loaded to db!");
-                    } else {
-                      res.status(201).send("Private Property not loaded to db!");
-                    }
-                  }).catch((err) => {          
-                    console.log(err);
-                  });
+                 const uploadProperties = await privateProperty.save(privateProperty);
+                 console.log("uploadProperties", uploadProperties);
     
                 let myLoop = 0;
                 myLoop++;
-                
-
-               do {
-                    if(myLoop == elem.length){
-                
-                        myString = JSON.stringify(data)
-                        writeStream.write(myString)
-                    } else {
-                        let myString = JSON.stringify(data) + ', \n'
-                        writeStream.write(myString)
-                    }
-                }  while (myLoop <= elem.length )
-            
-                
             });
-    
-            
-            // $('.pagination').each((index, elem) => {
-            //     const pages = $(elem).find('.pageNumber').text()
-            //     max = pages.substring(pages.indexOf('7') + 1, pages.indexOf('Next'))
-            //     mogs = parseInt(max)
-            //     console.log("from pagination: ", mogs)
-    
-            // });
         }
     });
      }

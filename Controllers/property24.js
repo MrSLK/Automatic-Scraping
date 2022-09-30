@@ -3,7 +3,16 @@ const puppeteer = require("puppeteer")
 const db = require("../Models");
 const Property24 = db.property24;
 
-exports.startProperty24Scraping = async (req, res) => {
+let data = {
+  newPrice: '',
+  newSize: '',
+  fullAddress: '',
+  propertyType: '',
+  title: '',
+  runDate: ''
+}
+
+const startProperty24 = async (req, res) => {
 
   const browser = await puppeteer.launch()
   const page = await browser.newPage()
@@ -25,7 +34,6 @@ exports.startProperty24Scraping = async (req, res) => {
     return Array.from(document.querySelectorAll(".p24_size")).map(x => x.textContent)
   })
 
-  console.log("Default title", title);
   let fullAddress = [], newPrice = [], newSize = [], propertyType = [], tempPropertyType, tempSize, tempAdd;
   for (let i = 3; i < size.length; i++) {
     tempSize = size[i].replace(/[\r\n]/gm, '');
@@ -54,20 +62,8 @@ let lastWord;
     fullAddress.push(tempAdd);
   }
 
-  let data = {
-    newPrice: '',
-    newSize: '',
-    fullAddress: '',
-    propertyType: '',
-    title: '',
-    runDate: ''
-  }
-  let properties = []
 
-  console.log("New price:", newPrice);
-  console.log("New size:", newSize);
-  console.log("fullAddress", fullAddress);
-  console.log("location:", location);
+  let properties = []
 
   const runDate = new Date(Date.now())
 
@@ -77,6 +73,7 @@ let lastWord;
       newSize: newSize[b],
       fullAddress: fullAddress[b],
       propertyType: propertyType[b],
+      title: title[b],
       runDate: runDate
     }
 
@@ -88,16 +85,21 @@ let lastWord;
       title: title[b],
       runDate: runDate
     });
-    const uploadedProperty = await property24.save(property24);
-    console.log("uploaded Property", uploadedProperty)
+    // const uploadedProperty = await property24.save(property24);
 
     properties.push(data);
     
   }
-  
-
-
   await browser.close()
+
+  return properties;
+}
+
+exports.startProperty24Scraping = async (req, res) => {
+  const props = await startProperty24();
+  console.log("All properties", props);
+
+  return res.status(200).send(props)
 }
 
 exports.getAllProperty24Data = (req, res) => {
@@ -114,4 +116,9 @@ exports.getAllProperty24Data = (req, res) => {
   }).catch((err) => {
     console.log(err);
   });
+}
+
+exports.getCounter = (req, res) => {
+  const counter = Property24.find({}).count();
+  console.log("Property24 counter", counter);
 }
