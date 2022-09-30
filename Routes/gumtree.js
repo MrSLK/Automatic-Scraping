@@ -10,4 +10,5 @@ module.exports = function(app) {
   });
 
   app.post("/gumtree", controller.startGumtreeScraping);
+  app.get("/get-all-gumtree", controller.getAllGumtreeData);
   };

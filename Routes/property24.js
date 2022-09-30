@@ -9,5 +9,6 @@ module.exports = function(app) {
     next();
   });
 
-  app.post("/Private24", controller.startProperty24Scraping);
+  app.post("/Property-24", controller.startProperty24Scraping);
+  app.get("/get-all-Property-24", controller.getAllProperty24Data);
   };

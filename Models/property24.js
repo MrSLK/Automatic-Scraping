@@ -4,12 +4,12 @@ const mongoose = require("mongoose");
 const Property24 = mongoose.model(
   "Property24",
   new mongoose.Schema({
-    price: String,
+    newPrice: String,
+    newSize: String,
+    fullAddress: String,
+    propertyType: String,
     title: String,
-    address: String,
-    bedroom: String,
-    bathroom: String,
-    size: String,
+    runDate: Date
   })
 );
 

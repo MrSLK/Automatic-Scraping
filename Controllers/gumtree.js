@@ -12,6 +12,7 @@ let prefs = [];
 exports.startGumtreeScraping = async (req, res) => {
 
   let limiter = await getRep()
+  console.log("Limiter:", limiter);
 
   const browser = await puppeteer.launch()
   const page = await browser.newPage()
@@ -24,24 +25,64 @@ exports.startGumtreeScraping = async (req, res) => {
       waitUntil: 'load',
       // Remove the timeout
       timeout: 0
-  });
+    });
 
 
     let temp = await page.evaluate(() => {
       return Array.from(document.querySelectorAll(".related-ad-title")).map(x => x.getAttribute('href'))
     })
     price.push(temp)
-    
+
     console.log("price", price);
     console.log("Array of hrefs", temp.length);
 
+    let tempLink, tempPrefNum;
     for (let x = 0; x < temp.length; x++) {
-      console.log("href",temp[x]);
-      await scrape(temp[x])
+      console.log("href", temp[x]);
+      tempLink = temp[x];
+      tempPrefNum = await scrape(tempLink)
+
+      console.log("prefNumber", tempPrefNum);
+
+      const gumtree = new Gumtree({
+        prefNumber: tempPrefNum
+      });
+
+      await gumtree.save(gumtree).then((response) => {
+        console.log(response);
+      }).catch((err) => {
+        console.log(err);
+      });
+
+      prefs.push(tempPrefNum);
     }
+
+    console.log("All prefNumbers", prefs);
 
   }
   await browser.close()
+}
+
+async function getRep() {
+
+  const browser = await puppeteer.launch()
+  const page = await browser.newPage()
+  await page.goto('https://www.gumtree.co.za/u-seller-listings/preferental-platform/v1u114570700p1', {
+    waitUntil: 'load',
+    // Remove the timeout
+    timeout: 0
+  })
+
+  let pagination = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll(".page-box")).map(x => x.textContent)
+  })
+
+  pagination = pagination.toLocaleString()
+  let pricePagination = pagination.split(',').pop();
+
+  await browser.close()
+
+  return pricePagination
 }
 
 async function scrape(latestLink) {
@@ -55,62 +96,40 @@ async function scrape(latestLink) {
     waitUntil: 'load',
     // Remove the timeout
     timeout: 0
-})
+  })
 
   let desc = await page.evaluate(() => {
     return Array.from(document.querySelectorAll(".phoneclick-increment")).map(x => x.getAttribute('href'))
   })
 
+  console.log("desc", desc);
   desc = desc.toLocaleString()
 
   var numb = desc.match(/\d/g);
   console.log("numb", numb);
- if (numb != null){ 
-  numb = await numb.join("");
-}
+  if (numb != null) {
+    numb = await numb.join("");
+  }
 
   let prefNumber = `Pref${numb}`;
 
-  console.log("prefNumber", prefNumber);
+  await browser.close();
 
-  const gumtree = new Gumtree ({
-    prefNumber: prefNumber
-  });
-
-  await gumtree.save(gumtree).then((response) => {
-    if (response) {
-      res.status(201).send("Gumtree loaded to db!");
-    } else {
-      res.status(201).send("Gumtree not loaded to db!");
-    }
-  }).catch((err) => {          
-    console.log(err);
-  });
-
-  prefs.push(prefNumber);
-
-  await browser.close()
+  return prefNumber;
 }
 
+exports.getAllGumtreeData = (req, res) => {
 
-async function getRep() {
+  Gumtree.find({}).then((response) => {
+    console.log("Response", response);
 
-  const browser = await puppeteer.launch()
-  const page = await browser.newPage()
-  await page.goto('https://www.gumtree.co.za/u-seller-listings/preferental-platform/v1u114570700p1', {
-    waitUntil: 'load',
-    // Remove the timeout
-    timeout: 0
-})
+    if(response.length > 0){
 
-  let pagination = await page.evaluate(() => {
-    return Array.from(document.querySelectorAll(".page-box")).map(x => x.textContent)
-  })
-
-  pagination = pagination.toLocaleString()
-  let pricePagination = pagination.split(',').pop();
-
-  await browser.close()
-
-  return pricePagination
+      return res.status(201).json(response);
+    } else {
+      return res.status(400).json({message: "No data found"});
+    }
+  }).catch((err) => {
+    console.log(err);
+  });
 }

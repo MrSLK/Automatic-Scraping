@@ -22,5 +22,14 @@
     "pretty": "^2.0.0",
     "puppeteer": "^17.0.0",
     "request": "^2.88.2"
+  },
+  "nodemonConfig": {
+    "ext": "js",
+    "ignore": [
+      "*.test.ts",
+      "db/*"
+    ],
+    "delay": "2"
   }
+
 }

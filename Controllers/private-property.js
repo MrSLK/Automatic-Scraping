@@ -173,3 +173,19 @@ exports.startPrivatePropertyScraping =  (req, res) => {
     });
      }
  }
+
+ exports.getAllPrivatePropertyData = (req, res) => {
+
+    PrivateProperty.find({}).then((response) => {
+        console.log("Response", response);
+    
+        if(response.length > 0){
+    
+          return res.status(201).json(response);
+        } else {
+          return res.status(400).json({message: "No data found"});
+        }
+      }).catch((err) => {
+        console.log(err);
+      });
+ }
