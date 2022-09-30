@@ -118,7 +118,12 @@ exports.getAllProperty24Data = (req, res) => {
   });
 }
 
-exports.getCounter = (req, res) => {
-  const counter = Property24.find({}).count();
-  console.log("Property24 counter", counter);
+exports.getCounterProperty24 = (req, res) => {
+
+    Property24.count({}).then((response) => {
+      console.log("Property24 counter", response);
+      return res.status(200).json(response)
+    }).catch((error) => {
+      console.log(error);
+    })
 }

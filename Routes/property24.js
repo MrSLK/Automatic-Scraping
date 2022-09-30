@@ -11,5 +11,5 @@ module.exports = function(app) {
 
   app.post("/Property-24", controller.startProperty24Scraping);
   app.get("/get-all-Property-24", controller.getAllProperty24Data);
-  app.get("/total-Property-24", controller.getCounter);
+  app.get("/total-Property-24", controller.getCounterProperty24);
   };

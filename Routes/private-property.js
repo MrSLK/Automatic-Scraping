@@ -11,4 +11,5 @@ module.exports = function(app) {
 
   app.post("/Private-Property", controller.startPrivatePropertyScraping);
   app.get("/Get-All-Private-Property", controller.getAllPrivatePropertyData);
+  app.get("/total-Private-property", controller.getCounterPrivateProperty);
   };

@@ -159,3 +159,13 @@ exports.startPrivatePropertyScraping =   (req, res) => {
         console.log(err);
       });
  }
+
+ exports.getCounterPrivateProperty = (req, res) => {
+
+    PrivateProperty.count({}).then((response) => {
+      console.log("Private property counter", response);
+      return res.status(200).json(response)
+    }).catch((error) => {
+      console.log(error);
+    })
+}

@@ -133,3 +133,13 @@ exports.getAllGumtreeData = (req, res) => {
     console.log(err);
   });
 }
+
+exports.getCounterGumtree = (req, res) => {
+
+  Gumtree.count({}).then((response) => {
+    console.log("Gumtree counter", response);
+    return res.status(200).json(response)
+  }).catch((error) => {
+    console.log(error);
+  })
+}
