@@ -169,3 +169,57 @@ exports.startPrivatePropertyScraping =   (req, res) => {
       console.log(error);
     })
 }
+
+exports.findDuplicates = (req, res) => {
+    let results = [];
+    PrivateProperty.aggregate([
+        {
+          $group: {
+            // collect ids of the documents, that have same value 
+            // for a given key ('val' prop in this case)
+            _id: '$reference',
+            ids: {
+              $push: '$_id'
+            },
+            // count N of duplications per key
+            totalIds: {
+              $sum: 1,
+            }
+          }
+        },
+        {
+          $match: {
+            // match only documents with duplicated value in a key
+            totalIds: {
+              $gt: 1,
+            },
+          },
+        },
+        {
+          $project: {
+            _id: false,
+            documentsThatHaveDuplicatedValue: '$ids',
+          }
+        },
+      ]).then((response) => {
+
+        if(response) {
+            for(let x = 0; x < response.length; x++){
+                for(let p = 1; p < response[x].documentsThatHaveDuplicatedValue.length; p++){
+                 let id = response[x].documentsThatHaveDuplicatedValue[p]
+                 PrivateProperty.deleteOne({"_id": id}).then((shiba) => {
+                 console.log("From: ", shiba)
+                 results.push(shiba);
+             }).catch((err) => (console.log(err)))
+                }
+            }
+            // return results
+            return res.status(201).send("Removed duplicates")
+        } else {
+            // return "Failed to delete duplicates"
+            return res.status(400).json(response)
+        }
+    }).catch((err) => {
+        console.log(err);
+    });
+ }
