@@ -1,6 +1,5 @@
 const db = require("../Models");
 const puppeteer = require("puppeteer")
-const fs = require("fs/promises")
 
 const Gumtree = db.gumtree;
 
@@ -9,18 +8,16 @@ let toPass;
 let price = [];
 let prefs = [];
 
-exports.startGumtreeScraping = async (req, res) => {
+exports.startGumtreeScraping = async () => {
 
-  let limiter = await getRep()
-  console.log("Limiter:", limiter);
+  let limiter = await getRep();
 
-  const browser = await puppeteer.launch()
-  const page = await browser.newPage()
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
 
   for (let i = 1; i <= limiter; i++) {
 
-    toPass = link + i
-    console.log("toPass: ", toPass);
+    toPass = link + i;
     await page.goto(toPass, {
       waitUntil: 'load',
       // Remove the timeout
@@ -31,18 +28,12 @@ exports.startGumtreeScraping = async (req, res) => {
     let temp = await page.evaluate(() => {
       return Array.from(document.querySelectorAll(".related-ad-title")).map(x => x.getAttribute('href'))
     })
-    price.push(temp)
-
-    console.log("price", price);
-    console.log("Array of hrefs", temp.length);
+    price.push(temp);
 
     let tempLink, tempPrefNum;
     for (let x = 0; x < temp.length; x++) {
-      console.log("href", temp[x]);
       tempLink = temp[x];
-      tempPrefNum = await scrape(tempLink)
-
-      console.log("prefNumber", tempPrefNum);
+      tempPrefNum = await scrape(tempLink);
 
       const gumtree = new Gumtree({
         prefNumber: tempPrefNum
@@ -56,8 +47,6 @@ exports.startGumtreeScraping = async (req, res) => {
 
       prefs.push(tempPrefNum);
     }
-
-    console.log("All prefNumbers", prefs);
 
   }
   await browser.close()
@@ -80,15 +69,14 @@ async function getRep() {
   pagination = pagination.toLocaleString()
   let pricePagination = pagination.split(',').pop();
 
-  await browser.close()
+  await browser.close();
 
   return pricePagination
 }
 
 async function scrape(latestLink) {
   let defaultLink = 'https://www.gumtree.co.za'
-  let newLink = defaultLink + latestLink
-  console.log("New link", newLink);
+  let newLink = defaultLink + latestLink;
 
   const browser = await puppeteer.launch()
   const page = await browser.newPage()
@@ -102,21 +90,16 @@ async function scrape(latestLink) {
     return Array.from(document.querySelectorAll(".phoneclick-increment")).map(x => x.getAttribute('href'))
   })
 
-  console.log("desc", desc);
   desc = desc.toLocaleString()
 
   var numb = desc.match(/\d/g);
-  console.log("numb", numb);
   if (numb != null) {
     numb = await numb.join("");
   }
 
   let prefNumber = `Pref${numb}`;
-  console.log("PrefNumber before substring", prefNumber);
-  console.log("PrefNumber length:", prefNumber.length);
   if(prefNumber.length > 12){
     prefNumber = prefNumber.substring(0, 12)
-    console.log("Substringed prefNumber:", prefNumber);
   }
 
   await browser.close();
@@ -128,7 +111,6 @@ exports.getAllGumtreeData = (req, res) => {
 
   Gumtree.find({}).then((response) => {
     console.log("Response", response);
-
     if(response.length > 0){
 
       return res.status(201).json(response);

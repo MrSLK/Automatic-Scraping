@@ -1,24 +1,17 @@
 const request = require('request');
 const cheerio = require('cheerio');
-const fs = require('fs');
-const writeStream = fs.createWriteStream('property - middelburg.json')
 
 const db = require("../Models");
 const PrivateProperty = db.privateproperty;
 
-//Detemines how many times . appears in a string 
 function count(str, find) {
     return (str.split(find)).length - 1;
 }
-// Headers
-// writeStream.write('[ \n');
 let link = 'https://www.privateproperty.co.za/estate-agency/preferental/rental-listings/10490'
 
 exports.startPrivatePropertyScraping =   (req, res) => {
     for (let x = 0; x < 999; x++) {
         request(`${link}?page=${x}`, (err, response, html) => {
-        // shiba = shiba + 1;
-        let data;
         if(!err){
             const $ = cheerio.load(html)
     
@@ -133,11 +126,8 @@ exports.startPrivatePropertyScraping =   (req, res) => {
                     reference: reference
                   });
                 
-                 const uploadProperties = await privateProperty.save(privateProperty);
-                 console.log("uploadProperties", uploadProperties);
-    
-                let myLoop = 0;
-                myLoop++;
+                 const uploadProperties = privateProperty.save(privateProperty);
+                 
             });
         }
     });

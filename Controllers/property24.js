@@ -4,44 +4,69 @@ const db = require("../Models");
 const Property24 = db.property24;
 
 let data = {
-  newPrice: '',
-  newSize: '',
-  fullAddress: '',
+  price: '',
+  size: '',
+  address: '',
   propertyType: '',
   title: '',
   runDate: ''
 }
 
-const startProperty24 = async (req, res) => {
+const mainLink = "https://www.property24.com/to-rent/agency/preferental-platform/preferental-platform/233159/p1"
+
+const startProperty24 = async () => {
 
   const browser = await puppeteer.launch()
   const page = await browser.newPage()
-  await page.goto("https://www.property24.com/to-rent/agency/preferental-platform/preferental-platform/233159/p1")
+  await page.goto(mainLink)
 
-  let price = await page.evaluate(() => {
+  const pagination = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll(".pagination")).map(x => x.textContent)
+  })
+
+  let pages = [], tempLength;
+  for (let i = 0; i < pagination.length; i++) {
+    pages.push(pagination[i].toString().replace(/\s/g, '').substring(1));
+  }
+
+  tempLength = pages[0];
+  tempLength = tempLength.charAt(tempLength.length-1)
+  tempLength = parseInt(tempLength)
+
+   await browser.close()
+
+   return tempLength;
+}
+
+const startScraping = async (link) => {
+
+  const browser = await puppeteer.launch()
+  const p = await browser.newPage()
+  await p.goto(link)
+
+  let price = await p.evaluate(() => {
     return Array.from(document.querySelectorAll(".p24_price")).map(x => x.textContent)
   })
-  const title = await page.evaluate(() => {
+  const title = await p.evaluate(() => {
     return Array.from(document.querySelectorAll(".p24_title")).map(x => x.textContent)
   })
-  const location = await page.evaluate(() => {
+  const location = await p.evaluate(() => {
     return Array.from(document.querySelectorAll(".p24_location")).map(x => x.textContent)
   })
-  const address = await page.evaluate(() => {
+  const address = await p.evaluate(() => {
     return Array.from(document.querySelectorAll(".p24_address")).map(x => x.textContent)
   })
-  const size = await page.evaluate(() => {
+  const size = await p.evaluate(() => {
     return Array.from(document.querySelectorAll(".p24_size")).map(x => x.textContent)
   })
 
-  let fullAddress = [], newPrice = [], newSize = [], propertyType = [], tempPropertyType, tempSize, tempAdd;
+  let fullAddress = [], newPrice = [], newSize = [], propertyType = [], tempSize, tempAdd, lastWord;
   for (let i = 3; i < size.length; i++) {
     tempSize = size[i].replace(/[\r\n]/gm, '');
     tempSize = tempSize.trim();
-    // newSize.push(tempSize);
+    newSize.push(tempSize);
   }
 
-let lastWord;
   for (let x = 0; x < title.length; x++) {
     lastWord = title[x].split(' ').pop();
     propertyType.push(lastWord);
@@ -57,49 +82,48 @@ let lastWord;
     newPrice.push(price[i].toString().replace(/\s/g, '').substring(1));
   }
 
-  for (let a = 0; a < address.length; a++) {
-    tempAdd = address[a] + ', ' + location[a]
-    fullAddress.push(tempAdd);
-  }
-
-
-  let properties = []
+  propertyType.pop();
 
   const runDate = new Date(Date.now())
 
-  for (let b = 0; b < price.length; b++) {
+  for (let b = 0; b < address.length; b++) {
     data = {
-      newPrice: newPrice[b],
-      newSize: newSize[b],
-      fullAddress: fullAddress[b],
+      price: newPrice[b],
+      size: newSize[b],
+      address: fullAddress[b],
       propertyType: propertyType[b],
       title: title[b],
       runDate: runDate
     }
 
     const property24 = new Property24({
-      newPrice: newPrice[b],
-      newSize: newSize[b],
-      fullAddress: fullAddress[b],
+      price: newPrice[b],
+      size: newSize[b],
+      address: fullAddress[b],
       propertyType: propertyType[b],
       title: title[b],
       runDate: runDate
     });
-    // const uploadedProperty = await property24.save(property24);
-
-    properties.push(data);
-    
+    console.log("property24:", property24);
+    property24.save(data).then((result) => {
+      console.log("result", result);
+    }).catch((error) => {
+      console.log(error);
+    })
   }
-  await browser.close()
-
-  return properties;
 }
 
 exports.startProperty24Scraping = async (req, res) => {
-  const props = await startProperty24();
-  console.log("All properties", props);
+  let pages = await startProperty24();
+  let link;
 
-  return res.status(200).send(props)
+  console.log("How many times to loop", pages);
+  for (let i = 1; i <= pages; i++) {
+    link = `https://www.property24.com/to-rent/agency/preferental-platform/preferental-platform/233159/p${i}`;
+    await startScraping(link);
+  }
+
+  return res.status(200).send("Successfully scraped property24");
 }
 
 exports.getAllProperty24Data = (req, res) => {
@@ -126,4 +150,58 @@ exports.getCounterProperty24 = (req, res) => {
     }).catch((error) => {
       console.log(error);
     })
+}
+
+exports.findDuplicates = (req, res) => {
+  let results = [];
+  Property24.aggregate([
+      {
+        $group: {
+          // collect ids of the documents, that have same value 
+          // for a given key ('val' prop in this case)
+          _id: '$fullAddress',
+          ids: {
+            $push: '$_id'
+          },
+          // count N of duplications per key
+          totalIds: {
+            $sum: 1,
+          }
+        }
+      },
+      {
+        $match: {
+          // match only documents with duplicated value in a key
+          totalIds: {
+            $gt: 1,
+          },
+        },
+      },
+      {
+        $project: {
+          _id: false,
+          documentsThatHaveDuplicatedValue: '$ids',
+        }
+      },
+    ]).then((response) => {
+
+      if(response) {
+          for(let x = 0; x < response.length; x++){
+              for(let p = 1; p < response[x].documentsThatHaveDuplicatedValue.length; p++){
+               let id = response[x].documentsThatHaveDuplicatedValue[p]
+               Property24.deleteOne({"_id": id}).then((shiba) => {
+               console.log("From: ", shiba)
+               results.push(shiba);
+           }).catch((err) => (console.log(err)))
+              }
+          }
+          // return results
+          return res.status(201).send("Removed duplicates")
+      } else {
+          // return "Failed to delete duplicates"
+          return res.status(400).json(response)
+      }
+  }).catch((err) => {
+      console.log(err);
+  });
 }
