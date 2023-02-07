@@ -9,8 +9,7 @@ module.exports = function(app) {
     next();
   });
 
-  app.post("/Private-Property", controller.startPrivatePropertyScraping, controller.findDuplicates);
-  app.get("/Get-All-Private-Property", controller.getAllPrivatePropertyData);
-  app.get("/total-Private-property", controller.getCounterPrivateProperty);
-  app.get('/remove-Private-Property-duplicates', controller.findDuplicates);
+  app.post("/Private-Property", controller.startPrivatePropertyScraping);
+  app.get("/private-properties", controller.getAllPrivatePropertyData);
+  app.get("/private-properties-counter", controller.getCounterPrivateProperty)
  };

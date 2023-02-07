@@ -31,7 +31,9 @@ app.get("/", (req, res) => {
 require("./Routes/gumtree")(app);
 require("./Routes/myproperty")(app);
 require("./Routes/private-property")(app);
-require("./Routes/property24")(app);
+require("./Routes/pp")(app);
+// require("./Routes/property24")(app);
+require("./Routes/prop24")(app);
 
 
 const PORT = process.env.PORT || 4000;

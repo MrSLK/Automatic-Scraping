@@ -19,6 +19,7 @@
     "mongoose": "^6.6.0",
     "node": "^16.17.0",
     "nodemon": "^2.0.19",
+    "playwright": "^1.30.0",
     "pretty": "^2.0.0",
     "puppeteer": "^17.0.0",
     "request": "^2.88.2"

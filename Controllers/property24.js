@@ -104,9 +104,8 @@ const startScraping = async (link) => {
       title: title[b],
       runDate: runDate
     });
-    console.log("property24:", property24);
     property24.save(data).then((result) => {
-      console.log("result", result);
+      // console.log("result", result);
     }).catch((error) => {
       console.log(error);
     })
@@ -117,42 +116,11 @@ exports.startProperty24Scraping = async (req, res) => {
   let pages = await startProperty24();
   let link;
 
-  console.log("How many times to loop", pages);
   for (let i = 1; i <= pages; i++) {
     link = `https://www.property24.com/to-rent/agency/preferental-platform/preferental-platform/233159/p${i}`;
     await startScraping(link);
   }
 
-  return res.status(200).send("Successfully scraped property24");
-}
-
-exports.getAllProperty24Data = (req, res) => {
-
-  Property24.find({}).then((response) => {
-    console.log("Response", response);
-
-    if(response.length > 0){
-
-      return res.status(201).json(response);
-    } else {
-      return res.status(400).json({message: "No data found"});
-    }
-  }).catch((err) => {
-    console.log(err);
-  });
-}
-
-exports.getCounterProperty24 = (req, res) => {
-
-    Property24.count({}).then((response) => {
-      console.log("Property24 counter", response);
-      return res.status(200).json(response)
-    }).catch((error) => {
-      console.log(error);
-    })
-}
-
-exports.findDuplicates = (req, res) => {
   let results = [];
   Property24.aggregate([
       {
@@ -190,13 +158,12 @@ exports.findDuplicates = (req, res) => {
               for(let p = 1; p < response[x].documentsThatHaveDuplicatedValue.length; p++){
                let id = response[x].documentsThatHaveDuplicatedValue[p]
                Property24.deleteOne({"_id": id}).then((shiba) => {
-               console.log("From: ", shiba)
                results.push(shiba);
            }).catch((err) => (console.log(err)))
               }
           }
           // return results
-          return res.status(201).send("Removed duplicates")
+          return res.status(201).send("Successfully scraped and Removed duplicates")
       } else {
           // return "Failed to delete duplicates"
           return res.status(400).json(response)
@@ -204,4 +171,34 @@ exports.findDuplicates = (req, res) => {
   }).catch((err) => {
       console.log(err);
   });
+}
+
+exports.getAllProperty24Data = (req, res) => {
+
+  Property24.find({}).then((response) => {
+    // console.log("Response", response);
+
+    if(response.length > 0){
+
+      return res.status(201).json(response);
+    } else {
+      return res.status(400).json({message: "No data found"});
+    }
+  }).catch((err) => {
+    console.log(err);
+  });
+}
+
+exports.getCounterProperty24 = (req, res) => {
+  Property24.aggregate( [
+    { $count: "myCount" }
+ ]).then((response) => {
+  if (response.length > 0) {
+    return res.status(201).json(response[0].myCount);
+  } else {
+    return res.status(400).json({ message: "No data found" });
+  }
+}).catch((err) => {
+  console.log(err);
+});
 }

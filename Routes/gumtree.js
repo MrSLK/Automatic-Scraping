@@ -9,8 +9,7 @@ module.exports = function(app) {
     next();
   });
 
-  app.post("/gumtree", controller.startGumtreeScraping, controller.findDuplicates);
+  app.post("/gumtree", controller.startGumtreeScraping);
   app.get("/get-all-gumtree", controller.getAllGumtreeData);
   app.get("/total-gumtree", controller.getCounterGumtree);
-  app.get('/remove-Gumtree-duplicates', controller.findDuplicates);
   };
