@@ -11,7 +11,7 @@ app.use(cors(corsOptions));
 
 app.use(express.json());
 
-mongoose.connect('mongodb+srv://shiba:T3wV6lsQTNCcDU4V@cluster0.ln0xh6f.mongodb.net/scraping?retryWrites=true&w=majority',
+mongoose.connect('mongodb+srv://shiba:5Dswu1WmuaK97pTj@cluster0.ln0xh6f.mongodb.net/scraping?retryWrites=true&w=majority',
   {
     useNewUrlParser: true,
     useUnifiedTopology: true
